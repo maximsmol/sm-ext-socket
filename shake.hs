@@ -35,59 +35,72 @@ main = shakeArgs (shakeOptions' (def :: DirCfg)) $ do
   -- base
   let
     distPath = dircfg^.field @"dist"
-  in
-    let
-      libName = "smsocket"
-      libPrefix = "lib"
-      libPostfix = ""
-      libExt = "dylib"
-      libFilename = libPrefix++libName++libPostfix<.>libExt
-      libPath = distPath</>libFilename
     in
       let
-        targetCfg =
-          (def :: CPPTargetCfg)
-            & field @"name" .~ libName
-        cppObjBuildCfg =
-          let
-            sourceCfg =
-              (def :: CPPSourceCfg)
-                & field @"fromInTarget" .~ ((<.> "cpp") <$> [""])
-            includeListing =
-              (def :: CPPIncludeListing)
-                & field @"fromInTarget" .~ ["."]
-            sysIncludeListing =
-              (def :: CPPIncludeListing)
-                & field @"fromWorld" .~ []
-            includeCfg =
-              (def :: CPPIncludeCfg)
-                & field @"warn" .~ includeListing
-                & field @"noWarn" .~ sysIncludeListing
-          in
-            (def :: CPPObjBuildCfg)
-              & field @"target" .~ targetCfg
-              & field @"srcs" .~ sourceCfg
-              & field @"includes" .~ includeCfg
-        linkBuildCfg =
-          let
-            objSourceCfg =
-              (def :: CPPObjSourceCfg)
-                & field @"fromCPPObjBuild" .~ [cppObjBuildCfg]
-                & field @"fromWorld" .~ []
-            flagCfg =
-              defaultCPPLinkBuildFlagCfg
-                & field @"common" <>~ ["-shared", "-install_name", "@rpath"</>libFilename]
-          in
-            (def :: CPPLinkBuildCfg)
-              & field @"name" .~ libFilename
-              & field @"target" .~ targetCfg
-              & field @"objs" .~ objSourceCfg
-              & field @"flags" .~ flagCfg
-      in do
-        genCPPObjBuildRules cppObjBuildCfg
-        genCPPLinkBuildRules linkBuildCfg
-        linkToDistRules (getCPPLinkPrimaryBuildOut linkBuildCfg) libPath
-        want [libPa]
+        libName = "smsocket"
+        libPrefix = "lib"
+        libPostfix = ""
+        libExt = "dylib"
+        libFilename = libPrefix++libName++libPostfix<.>libExt
+        libPath = distPath</>libFilename
+      in
+        let
+          targetCfg =
+            (def :: CPPTargetCfg)
+              & field @"name" .~ libName
+          cppObjBuildCfg =
+            let
+              sourceCfg =
+                (def :: CPPSourceCfg)
+                  & field @"fromInTarget" .~ ((<.> "cpp") <$> [
+                    "Socket",
+                    "Extension",
+                    "sdk"</>"smsdk_ext",
+                    "SocketHandler",
+                    "Callback",
+                    "CallbackHandler"
+                  ])
+              includeListing =
+                (def :: CPPIncludeListing)
+                  & field @"fromInTarget" .~ ["."]
+              -- some stuff uses "amtl/amtlHeader.hpp", some uses "amtlHeader.hpp" so we add both folders to include path
+              sourcemodIncludes = ("sourcemod"</>) <$> (["sourcepawn"</>"include"] ++ (("public"</>) <$> [".", "amtl", "amtl"</>"amtl"]))
+              sysIncludeListing =
+                (def :: CPPIncludeListing)
+                  & field @"fromWorld" .~ sourcemodIncludes
+              includeCfg =
+                (def :: CPPIncludeCfg)
+                  & field @"warn" .~ includeListing
+                  & field @"noWarn" .~ sysIncludeListing
+              flagCfg =
+                defaultCPPObjectBuildFlagCfg
+                  & field @"common" <>~ ["-m32"]
+            in
+              (def :: CPPObjBuildCfg)
+                & field @"target" .~ targetCfg
+                & field @"srcs" .~ sourceCfg
+                & field @"includes" .~ includeCfg
+                & field @"flags" .~ flagCfg
+          linkBuildCfg =
+            let
+              objSourceCfg =
+                (def :: CPPObjSourceCfg)
+                  & field @"fromCPPObjBuild" .~ [cppObjBuildCfg]
+                  & field @"fromWorld" .~ ["libboost_thread-mt.dylib"]
+              flagCfg =
+                defaultCPPLinkBuildFlagCfg
+                  & field @"common" <>~ ["-m32", "-arch", "i386", "-dynamiclib", "-install_name", "@rpath"</>libFilename]
+            in
+              (def :: CPPLinkBuildCfg)
+                & field @"name" .~ libFilename
+                & field @"target" .~ targetCfg
+                & field @"objs" .~ objSourceCfg
+                & field @"flags" .~ flagCfg
+        in do
+          genCPPObjBuildRules cppObjBuildCfg
+          genCPPLinkBuildRules linkBuildCfg
+          linkToDistRules (getCPPLinkPrimaryBuildOut linkBuildCfg) libPath
+          want [libPath]
   return ()
 
 {-
@@ -99,6 +112,8 @@ ToDo:
 - CPP: Add precompiled headers
 - CPP: Add compile_commands generation
 - CPP: defaultCPPLinkBuildFlagCfg vs (def :: CPPFlagCfg)
+- rules for no input files fail with an uninformative error message
+- glob over file patterns fails silently
 - Take clangCompDB out of ProjectCfg
 - Look into record inheritance
 - Allow querying actual outputs of targets for dependencies

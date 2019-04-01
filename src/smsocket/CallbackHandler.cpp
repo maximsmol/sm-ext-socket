@@ -54,8 +54,13 @@ Callback* CallbackHandler::FetchFirstCallback() {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
+#pragma clang diagnostic ignored "-Wglobal-constructors"
+// todo: clean this up
 CallbackHandler callbackHandler;
+#pragma clang diagnostic pop
 

@@ -13,21 +13,21 @@ using namespace boost::asio::ip;
 
 template <class SocketType>
 Socket<SocketType>::Socket(SM_SocketType st,
-						   typename SocketType::socket* asioSocket) : connectCallback(NULL),
-																	  incomingCallback(NULL),
-																	  receiveCallback(NULL),
-																	  sendqueueEmptyCallback(NULL),
-																	  disconnectCallback(NULL),
-																	  errorCallback(NULL),
+						   typename SocketType::socket* asioSocket) : connectCallback(nullptr),
+																	  incomingCallback(nullptr),
+																	  receiveCallback(nullptr),
+																	  sendqueueEmptyCallback(nullptr),
+																	  disconnectCallback(nullptr),
+																	  errorCallback(nullptr),
 																	  smCallbackArg(0),
 																	  sendQueueLength(0),
 																	  sm_sockettype(st),
-																	  socket(NULL),
-																	  localEndpoint(NULL),
-																	  localEndpointMutex(NULL),
-																	  tcpAcceptor(NULL),
-																	  tcpAcceptorMutex(NULL) {
-	if (asioSocket != NULL) {
+																	  socket(nullptr),
+																	  localEndpoint(nullptr),
+																	  localEndpointMutex(nullptr),
+																	  tcpAcceptor(nullptr),
+																	  tcpAcceptorMutex(nullptr) {
+	if (asioSocket != nullptr) {
 		socket = asioSocket;
 	}
 }
@@ -37,24 +37,24 @@ Socket<SocketType>::~Socket() {
 	if (socket) {
 		boost::mutex::scoped_lock l(socketMutex);
 		socket->close();
-		
+
 		delete socket;
-		socket = NULL;
+		socket = nullptr;
 	}
 
 	if (tcpAcceptor) {
 		boost::mutex::scoped_lock l(*tcpAcceptorMutex);
 		tcpAcceptor->close();
-		
+
 		delete tcpAcceptor;
-		tcpAcceptor = NULL;
+		tcpAcceptor = nullptr;
 	}
-	
+
 	if (localEndpoint) {
 		boost::mutex::scoped_lock l(*localEndpointMutex);
-		
+
 		delete localEndpoint;
-		localEndpoint = NULL;
+		localEndpoint = nullptr;
 	}
 
 	// wait for all callbacks to terminate
@@ -91,7 +91,7 @@ void Socket<SocketType>::ReceiveHandler(char* buf, size_t bufferSize, size_t byt
 			return;
 		}
 	}
-	
+
 	if (errorCode) {
 		if (errorCode == boost::asio::error::eof ||
 			errorCode == boost::asio::error::connection_reset ||
@@ -99,19 +99,19 @@ void Socket<SocketType>::ReceiveHandler(char* buf, size_t bufferSize, size_t byt
 			// asio indicates disconnect
 
 			boost::mutex::scoped_lock l(socketMutex);
-			
+
 			if (socket) callbackHandler.AddCallback(new Callback(CallbackEvent_Disconnect, this));
 
 		} else if (errorCode != boost::asio::error::operation_aborted) {
 			// error
 
 			boost::mutex::scoped_lock l(socketMutex);
-			
+
 			if (socket) callbackHandler.AddCallback(new Callback(CallbackEvent_Error, this, SM_ErrorType_RECV_ERROR, errorCode.value()));
-			
+
 		}
 	}
-	
+
 	delete[] buf;
 	delete handlerLock;
 }
@@ -125,8 +125,8 @@ bool Socket<SocketType>::IsOpen() {
 
 template <class SocketType>
 bool Socket<SocketType>::Bind(const char* hostname, uint16_t port, bool async) {
-	typename SocketType::resolver* resolver = NULL;
-	boost::shared_lock<boost::shared_mutex>* handlerLock = NULL;
+	typename SocketType::resolver* resolver = nullptr;
+	boost::shared_lock<boost::shared_mutex>* handlerLock = nullptr;
 
 	try {
 		if (localEndpoint) {
@@ -163,7 +163,7 @@ bool Socket<SocketType>::Bind(const char* hostname, uint16_t port, bool async) {
 		}
 
 		return true;
-	} catch (std::exception& e) {
+	} catch (std::exception&) {
 		if (resolver) delete resolver;
 		if (handlerLock) delete handlerLock;
 	}
@@ -189,8 +189,8 @@ void Socket<SocketType>::BindPostResolveHandler(typename SocketType::resolver* r
 
 template <class SocketType>
 bool Socket<SocketType>::Connect(const char* hostname, uint16_t port, bool async) {
-	typename SocketType::resolver* resolver = NULL;
-	boost::shared_lock<boost::shared_mutex>* handlerLock = NULL;
+	typename SocketType::resolver* resolver = nullptr;
+	boost::shared_lock<boost::shared_mutex>* handlerLock = nullptr;
 
 	try {
 		char sPort[6];
@@ -230,11 +230,11 @@ bool Socket<SocketType>::Connect(const char* hostname, uint16_t port, bool async
 
 			if (error) throw boost::system::system_error(error);
 
-			ReceiveHandler(new char[16384], 16384, 0, boost::system::posix_error::make_error_code(boost::system::posix_error::success), new boost::shared_lock<boost::shared_mutex>(handlerMutex));
+			ReceiveHandler(new char[16384], 16384, 0, boost::system::errc::make_error_code(boost::system::errc::success), new boost::shared_lock<boost::shared_mutex>(handlerMutex));
 		}
 
 		return true;
-	} catch (std::exception& e) {
+	} catch (std::exception&) {
 		if (resolver) delete resolver;
 		if (handlerLock) delete handlerLock;
 	}
@@ -246,7 +246,7 @@ template <class SocketType>
 void Socket<SocketType>::ConnectPostResolveHandler(typename SocketType::resolver* resolver, typename SocketType::resolver::iterator endpointIterator, const boost::system::error_code& errorCode, boost::shared_lock<boost::shared_mutex>* handlerLock) {
 	if (!errorCode) {
 		typename SocketType::endpoint endpoint = *endpointIterator;
-		
+
 		boost::mutex::scoped_lock l(socketMutex);
 
 		if (socket) {
@@ -260,7 +260,7 @@ void Socket<SocketType>::ConnectPostResolveHandler(typename SocketType::resolver
 			return;
 		}
 	}
-	
+
 	if (errorCode && errorCode != boost::asio::error::operation_aborted) {
 		boost::mutex::scoped_lock l(socketMutex);
 
@@ -282,10 +282,10 @@ void Socket<SocketType>::ConnectPostConnectHandler(typename SocketType::resolver
 			}
 		} // ~lock
 
-		ReceiveHandler(new char[16384], 16384, 0, boost::system::posix_error::make_error_code(boost::system::posix_error::success), handlerLock);
-		
+		ReceiveHandler(new char[16384], 16384, 0, boost::system::errc::make_error_code(boost::system::errc::success), handlerLock);
+
 		delete resolver;
-			
+
 		return;
 	} else if (endpointIterator != typename SocketType::resolver::iterator()) {
 		{ // lock
@@ -296,8 +296,8 @@ void Socket<SocketType>::ConnectPostConnectHandler(typename SocketType::resolver
 			}
 		} // ~lock
 
-		ConnectPostResolveHandler(resolver, endpointIterator, boost::system::posix_error::make_error_code(boost::system::posix_error::success), handlerLock);
-			
+		ConnectPostResolveHandler(resolver, endpointIterator, boost::system::errc::make_error_code(boost::system::errc::success), handlerLock);
+
 		return;
 	}
 
@@ -321,7 +321,7 @@ bool Socket<SocketType>::Disconnect() {
 		socket->close();
 
 		return true;
-	} catch (std::exception& e) {
+	} catch (std::exception&) {
 	}
 
 	return false;
@@ -332,12 +332,12 @@ bool Socket<SocketType>::Listen() {
 	return false;
 }
 
-template<> void Socket<tcp>::ListenIncomingHandler(tcp::socket* newAsioSocket, const boost::system::error_code& errorCode, boost::shared_lock<boost::shared_mutex>* handlerLock);
+template<> void Socket<tcp>::ListenIncomingHandler(tcp::socket* /*newAsioSocket*/, const boost::system::error_code& /*errorCode*/, boost::shared_lock<boost::shared_mutex>* /*handlerLock*/);
 
 template<>
 bool Socket<tcp>::Listen() {
-	boost::shared_lock<boost::shared_mutex>* handlerLock = NULL;
-	tcp::socket* nextAsioSocket = NULL;
+	boost::shared_lock<boost::shared_mutex>* handlerLock = nullptr;
+	tcp::socket* nextAsioSocket = nullptr;
 
 	try {
 		if (!localEndpoint) throw std::logic_error("local endpoint not initialized, call bind() first");
@@ -356,7 +356,7 @@ bool Socket<tcp>::Listen() {
 				socketOptionQueue.pop();
 			}
 		}
-	
+
 		boost::mutex::scoped_lock l(*tcpAcceptorMutex);
 
 		handlerLock = new boost::shared_lock<boost::shared_mutex>(handlerMutex);
@@ -371,7 +371,7 @@ bool Socket<tcp>::Listen() {
 											  handlerLock));
 
 		return true;
-	} catch (std::exception& e) {
+	} catch (std::exception&) {
 		if (handlerLock) delete handlerLock;
 		if (nextAsioSocket) delete nextAsioSocket;
 	}
@@ -380,7 +380,7 @@ bool Socket<tcp>::Listen() {
 }
 
 template <class SocketType>
-void Socket<SocketType>::ListenIncomingHandler(tcp::socket* newAsioSocket, const boost::system::error_code& errorCode, boost::shared_lock<boost::shared_mutex>* handlerLock) {
+void Socket<SocketType>::ListenIncomingHandler(tcp::socket* /*newAsioSocket*/, const boost::system::error_code& /*errorCode*/, boost::shared_lock<boost::shared_mutex>* /*handlerLock*/) {
 	// invalid
 }
 template<>
@@ -389,11 +389,15 @@ void Socket<tcp>::ListenIncomingHandler(tcp::socket* newAsioSocket, const boost:
 		boost::mutex::scoped_lock l(*tcpAcceptorMutex);
 
 		if (tcpAcceptor) {
+			#pragma clang diagnostic push
+			#pragma clang diagnostic ignored "-Wundefined-func-template"
+			// todo: figure this out
 			Socket<tcp>* newSocket = socketHandler.CreateSocket<tcp>(sm_sockettype);
+			#pragma clang diagnostic pop
 			newSocket->socket = newAsioSocket;
 			callbackHandler.AddCallback(new Callback(CallbackEvent_Incoming, this, newSocket, newAsioSocket->remote_endpoint()));
 
-			newSocket->ReceiveHandler(new char[16384], 16384, 0, boost::system::posix_error::make_error_code(boost::system::posix_error::success), new boost::shared_lock<boost::shared_mutex>(newSocket->handlerMutex));
+			newSocket->ReceiveHandler(new char[16384], 16384, 0, boost::system::errc::make_error_code(boost::system::errc::success), new boost::shared_lock<boost::shared_mutex>(newSocket->handlerMutex));
 
 			tcp::socket* nextAsioSocket = new tcp::socket(*socketHandler.ioService);
 
@@ -417,14 +421,14 @@ void Socket<tcp>::ListenIncomingHandler(tcp::socket* newAsioSocket, const boost:
 
 template <class SocketType>
 bool Socket<SocketType>::Send(const std::string& data, bool async) {
-	char* buf = NULL;
-	boost::shared_lock<boost::shared_mutex>* handlerLock = NULL;
+	char* buf = nullptr;
+	boost::shared_lock<boost::shared_mutex>* handlerLock = nullptr;
 
 	try {
 		if (!socket && !tcpAcceptor) throw std::logic_error("can't send without connection");
 
 		if (async) {
-			char* buf = new char[data.length()];
+			buf = new char[data.length()];
 			memcpy(buf, data.data(), data.length());
 
 			sendQueueLength++;
@@ -455,7 +459,7 @@ bool Socket<SocketType>::Send(const std::string& data, bool async) {
 		}
 
 		return true;
-	} catch (std::exception& e) {
+	} catch (std::exception&) {
 		if (buf) delete[] buf;
 		if (handlerLock) delete handlerLock;
 	}
@@ -464,7 +468,7 @@ bool Socket<SocketType>::Send(const std::string& data, bool async) {
 }
 
 template <class SocketType>
-void Socket<SocketType>::SendPostSendHandler(char* buf, size_t bytesTransferred, const boost::system::error_code& errorCode, boost::shared_lock<boost::shared_mutex>* handlerLock) {
+void Socket<SocketType>::SendPostSendHandler(char* buf, size_t /*bytesTransferred*/, const boost::system::error_code& errorCode, boost::shared_lock<boost::shared_mutex>* handlerLock) {
 // TODO: handle incomplete sends
 	if (--sendQueueLength == 0 && sendqueueEmptyCallback) {
 		boost::mutex::scoped_lock l(socketMutex);
@@ -474,7 +478,7 @@ void Socket<SocketType>::SendPostSendHandler(char* buf, size_t bytesTransferred,
 
 	if (errorCode && errorCode != boost::asio::error::operation_aborted) {
 		boost::mutex::scoped_lock l(socketMutex);
-		
+
 		if (socket) callbackHandler.AddCallback(new Callback(CallbackEvent_Error, this, SM_ErrorType_SEND_ERROR, errorCode.value()));
 	}
 
@@ -483,15 +487,15 @@ void Socket<SocketType>::SendPostSendHandler(char* buf, size_t bytesTransferred,
 }
 
 template <class SocketType>
-bool Socket<SocketType>::SendTo(const std::string& data, const char* hostname, uint16_t port, bool async) {
+bool Socket<SocketType>::SendTo(const std::string& /*data*/, const char* /*hostname*/, uint16_t /*port*/, bool /*async*/) {
 	return false;
 }
 
 template <>
 bool Socket<udp>::SendTo(const std::string& data, const char* hostname, uint16_t port, bool async) {
-	char* buf = NULL;
-	udp::resolver* resolver = NULL;
-	boost::shared_lock<boost::shared_mutex>* handlerLock = NULL;
+	char* buf = nullptr;
+	udp::resolver* resolver = nullptr;
+	boost::shared_lock<boost::shared_mutex>* handlerLock = nullptr;
 
 	try {
 		char sPort[6];
@@ -532,7 +536,7 @@ bool Socket<udp>::SendTo(const std::string& data, const char* hostname, uint16_t
 		}
 
 		return true;
-	} catch (std::exception& e) {
+	} catch (std::exception&) {
 		if (resolver) delete resolver;
 		if (buf) delete[] buf;
 		if (handlerLock) delete handlerLock;
@@ -568,32 +572,33 @@ void Socket<SocketType>::SendToPostResolveHandler(typename SocketType::resolver*
 
 	if (errorCode && errorCode != boost::asio::error::operation_aborted) {
 		boost::mutex::scoped_lock l(socketMutex);
-		
+
 		if (socket) callbackHandler.AddCallback(new Callback(CallbackEvent_Error, this, SM_ErrorType_NO_HOST, errorCode.value()));
 	}
-	
+
 	delete resolver;
 	delete[] buf;
 	delete handlerLock;
 }
 
 template <class SocketType>
-void Socket<SocketType>::SendToPostSendHandler(typename SocketType::resolver* resolver, typename SocketType::resolver::iterator endpointIterator, char* buf, size_t bufLen, size_t bytesTransferred, const boost::system::error_code& errorCode, boost::shared_lock<boost::shared_mutex>* handlerLock) {
+void Socket<SocketType>::SendToPostSendHandler(typename SocketType::resolver* resolver, typename SocketType::resolver::iterator endpointIterator, char* buf, size_t bufLen, size_t /*bytesTransferred*/, const boost::system::error_code& errorCode, boost::shared_lock<boost::shared_mutex>* handlerLock) {
+	// todo: handle incomplete sends
 	if (!errorCode) {
 		if (--sendQueueLength == 0 && sendqueueEmptyCallback) {
 			boost::mutex::scoped_lock l(socketMutex);
-		
+
 			if (socket) callbackHandler.AddCallback(new Callback(CallbackEvent_SendQueueEmpty, this));
 		}
 
 	} else if (endpointIterator != typename SocketType::resolver::iterator()) {
-		SendToPostResolveHandler(resolver, endpointIterator, buf, bufLen, boost::system::posix_error::make_error_code(boost::system::posix_error::success), handlerLock);
+		SendToPostResolveHandler(resolver, endpointIterator, buf, bufLen, boost::system::errc::make_error_code(boost::system::errc::success), handlerLock);
 		return;
-		
+
 	} else {
 		if (errorCode != boost::asio::error::operation_aborted) {
 			boost::mutex::scoped_lock l(socketMutex);
-		
+
 			if (socket) callbackHandler.AddCallback(new Callback(CallbackEvent_Error, this, SM_ErrorType_SEND_ERROR, errorCode.value()));
 		}
 	}
@@ -605,7 +610,7 @@ void Socket<SocketType>::SendToPostSendHandler(typename SocketType::resolver* re
 
 template <class SocketType>
 bool Socket<SocketType>::SetOption(SM_SocketOption so, int value, bool lock) {
-	boost::mutex::scoped_lock* l = NULL;
+	boost::mutex::scoped_lock* l = nullptr;
 
 	try {
 		if (socket) {
@@ -652,7 +657,10 @@ bool Socket<SocketType>::SetOption(SM_SocketOption so, int value, bool lock) {
 					// TODO: implement?
 					if (l) delete l;
 					return false;
-				default:
+				case SM_SO_ForceFrameLock:
+				case SM_SO_CallbacksPerFrame:
+				case SM_SO_ConcatenateCallbacks:
+				case SM_SO_DebugMode:
 					if (l) delete l;
 					return false;
 			}
@@ -700,7 +708,10 @@ bool Socket<SocketType>::SetOption(SM_SocketOption so, int value, bool lock) {
 					// TODO: implement?
 					if (l) delete l;
 					return false;
-				default:
+				case SM_SO_ForceFrameLock:
+				case SM_SO_CallbacksPerFrame:
+				case SM_SO_ConcatenateCallbacks:
+				case SM_SO_DebugMode:
 					if (l) delete l;
 					return false;
 			}
@@ -710,7 +721,7 @@ bool Socket<SocketType>::SetOption(SM_SocketOption so, int value, bool lock) {
 
 		if (l) delete l;
 		return true;
-	} catch (std::exception& e) {
+	} catch (std::exception&) {
 		if (l) delete l;
 		return false;
 	}
@@ -720,11 +731,11 @@ template <class SocketType>
 void Socket<SocketType>::InitializeSocket() {
 	assert(!socket);
 
-	boost::mutex::scoped_lock l(socketMutex);
+	boost::mutex::scoped_lock socketLock(socketMutex);
 
 	if (!socket) {
 		if (localEndpointMutex) {
-			boost::mutex::scoped_lock l(*localEndpointMutex);
+			boost::mutex::scoped_lock endpointLock(*localEndpointMutex);
 
 			if (localEndpoint) {
 				socket = new typename SocketType::socket(*socketHandler.ioService, *localEndpoint);
@@ -734,7 +745,7 @@ void Socket<SocketType>::InitializeSocket() {
 		} else {
 			socket = new typename SocketType::socket(*socketHandler.ioService);
 		}
-		
+
 		if (!socket->is_open()) socket->open(SocketType::v4());
 
 		while (!socketOptionQueue.empty()) {

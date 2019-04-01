@@ -31,7 +31,11 @@
  */
 
 #include <stdio.h>
-#include <malloc.h>
+#ifndef __APPLE__
+	#include <malloc.h>
+#else
+	#include <stdlib.h>
+#endif
 #include "smsdk_ext.h"
 
 /**
@@ -39,50 +43,52 @@
  * @brief Contains wrappers for making Extensions easier to write.
  */
 
-IExtension *myself = NULL;				/**< Ourself */
-IShareSys *g_pShareSys = NULL;			/**< Share system */
-IShareSys *sharesys = NULL;				/**< Share system */
-ISourceMod *g_pSM = NULL;				/**< SourceMod helpers */
-ISourceMod *smutils = NULL;				/**< SourceMod helpers */
+IExtension *myself = nullptr;				/**< Ourself */
+IShareSys *g_pShareSys = nullptr;			/**< Share system */
+IShareSys *sharesys = nullptr;				/**< Share system */
+ISourceMod *g_pSM = nullptr;				/**< SourceMod helpers */
+ISourceMod *smutils = nullptr;				/**< SourceMod helpers */
 
 #if defined SMEXT_ENABLE_FORWARDSYS
-IForwardManager *g_pForwards = NULL;	/**< Forward system */
-IForwardManager *forwards = NULL;		/**< Forward system */
+IForwardManager *g_pForwards = nullptr;	/**< Forward system */
+IForwardManager *forwards = nullptr;		/**< Forward system */
 #endif
 #if defined SMEXT_ENABLE_HANDLESYS
-IHandleSys *g_pHandleSys = NULL;		/**< Handle system */
-IHandleSys *handlesys = NULL;			/**< Handle system */
+IHandleSys *g_pHandleSys = nullptr;		/**< Handle system */
+IHandleSys *handlesys = nullptr;			/**< Handle system */
 #endif
 #if defined SMEXT_ENABLE_PLAYERHELPERS
-IPlayerManager *playerhelpers = NULL;	/**< Player helpers */
+IPlayerManager *playerhelpers = nullptr;	/**< Player helpers */
 #endif //SMEXT_ENABLE_PLAYERHELPERS
 #if defined SMEXT_ENABLE_DBMANAGER
-IDBManager *dbi = NULL;					/**< DB Manager */
+IDBManager *dbi = nullptr;					/**< DB Manager */
 #endif //SMEXT_ENABLE_DBMANAGER
 #if defined SMEXT_ENABLE_GAMECONF
-IGameConfigManager *gameconfs = NULL;	/**< Game config manager */
+IGameConfigManager *gameconfs = nullptr;	/**< Game config manager */
 #endif //SMEXT_ENABLE_DBMANAGER
 #if defined SMEXT_ENABLE_MEMUTILS
-IMemoryUtils *memutils = NULL;
+IMemoryUtils *memutils = nullptr;
 #endif //SMEXT_ENABLE_DBMANAGER
 #if defined SMEXT_ENABLE_GAMEHELPERS
-IGameHelpers *gamehelpers = NULL;
+IGameHelpers *gamehelpers = nullptr;
 #endif
 #if defined SMEXT_ENABLE_TIMERSYS
-ITimerSystem *timersys = NULL;
+ITimerSystem *timersys = nullptr;
 #endif
 #if defined SMEXT_ENABLE_ADTFACTORY
-IADTFactory *adtfactory = NULL;
+IADTFactory *adtfactory = nullptr;
 #endif
 #if defined SMEXT_ENABLE_THREADER
-IThreader *threader = NULL;
+IThreader *threader = nullptr;
 #endif
 #if defined SMEXT_ENABLE_LIBSYS
-ILibrarySys *libsys = NULL;
+ILibrarySys *libsys = nullptr;
 #endif
 #if defined SMEXT_ENABLE_PLUGINSYS
 SourceMod::IPluginManager *plsys;
 #endif
+
+PLATFORM_EXTERN_C IExtensionInterface *GetSMExtAPI();
 
 /** Exports the main interface */
 PLATFORM_EXTERN_C IExtensionInterface *GetSMExtAPI()
@@ -205,7 +211,10 @@ const char *SDKExtension::GetExtensionAuthor()
 
 const char *SDKExtension::GetExtensionDateString()
 {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdate-time"
 	return SMEXT_CONF_DATESTRING;
+	#pragma clang diagnostic pop
 }
 
 const char *SDKExtension::GetExtensionDescription()
@@ -233,7 +242,7 @@ const char *SDKExtension::GetExtensionURL()
 	return SMEXT_CONF_URL;
 }
 
-bool SDKExtension::SDK_OnLoad(char *error, size_t maxlength, bool late)
+bool SDKExtension::SDK_OnLoad(char* /*error*/, size_t /*maxlength*/, bool /*late*/)
 {
 	return true;
 }
@@ -242,7 +251,7 @@ void SDKExtension::SDK_OnUnload()
 {
 }
 
-void SDKExtension::SDK_OnPauseChange(bool paused)
+void SDKExtension::SDK_OnPauseChange(bool /*paused*/)
 {
 }
 
@@ -253,12 +262,12 @@ void SDKExtension::SDK_OnAllLoaded()
 #if defined SMEXT_CONF_METAMOD
 
 PluginId g_PLID = 0;						/**< Metamod plugin ID */
-ISmmPlugin *g_PLAPI = NULL;					/**< Metamod plugin API */
-SourceHook::ISourceHook *g_SHPtr = NULL;	/**< SourceHook pointer */
-ISmmAPI *g_SMAPI = NULL;					/**< SourceMM API pointer */
+ISmmPlugin *g_PLAPI = nullptr;					/**< Metamod plugin API */
+SourceHook::ISourceHook *g_SHPtr = nullptr;	/**< SourceHook pointer */
+ISmmAPI *g_SMAPI = nullptr;					/**< SourceMM API pointer */
 
-IVEngineServer *engine = NULL;				/**< IVEngineServer pointer */
-IServerGameDLL *gamedll = NULL;				/**< IServerGameDLL pointer */
+IVEngineServer *engine = nullptr;				/**< IVEngineServer pointer */
+IServerGameDLL *gamedll = nullptr;				/**< IServerGameDLL pointer */
 
 /** Exposes the extension to Metamod */
 SMM_API void *PL_EXPOSURE(const char *name, int *code)
@@ -277,7 +286,7 @@ SMM_API void *PL_EXPOSURE(const char *name, int *code)
 		*code = IFACE_FAILED;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 bool SDKExtension::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
@@ -421,5 +430,5 @@ void operator delete[](void * ptr)
 	free(ptr);
 }
 
-extern "C" void _ZSt17__throw_bad_allocv(void) {}*/
+extern "C" void _ZStg7__throw_bad_allocv(void) {}*/
 #endif

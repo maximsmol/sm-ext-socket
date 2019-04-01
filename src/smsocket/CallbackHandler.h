@@ -1,5 +1,4 @@
-#ifndef INC_SEXT_CALLBACKHANDLER_H
-#define INC_SEXT_CALLBACKHANDLER_H
+#pragma once
 
 #include <deque>
 #include <boost/thread.hpp>
@@ -26,6 +25,3 @@ private:
 };
 
 extern CallbackHandler callbackHandler;
-
-#endif
-
