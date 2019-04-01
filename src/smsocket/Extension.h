@@ -1,5 +1,4 @@
-#ifndef INC_SEXT_EXTENSION_H
-#define INC_SEXT_EXTENSION_H
+#pragma once
 
 #include "sdk/smsdk_ext.h"
 #include "SocketHandler.h"
@@ -16,6 +15,3 @@ public:
 };
 
 extern Extension extension;
-
-#endif
-

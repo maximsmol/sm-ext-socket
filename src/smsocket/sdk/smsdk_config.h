@@ -1,6 +1,5 @@
 // vim: set ts=4 :
-#ifndef _INCLUDE_SOURCEMOD_EXTENSION_CONFIG_H_
-#define _INCLUDE_SOURCEMOD_EXTENSION_CONFIG_H_
+#pragma once
 
 /**
  * @file smsdk_config.h
@@ -42,6 +41,3 @@
 //#define SMEXT_ENABLE_ADTFACTORY
 //#define SMEXT_ENABLE_PLUGINSYS
 //#define SMEXT_ENABLE_THREADER
-
-#endif //_INCLUDE_SOURCEMOD_EXTENSION_CONFIG_H_
-

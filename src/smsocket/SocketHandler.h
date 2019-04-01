@@ -1,5 +1,4 @@
-#ifndef INC_SEXT_SOCKETHANDLER_H
-#define INC_SEXT_SOCKETHANDLER_H
+#pragma once
 
 #include <deque>
 #include <boost/asio.hpp>
@@ -8,7 +7,7 @@
 #include "Socket.h"
 
 struct SocketWrapper {
-	SocketWrapper(void* socket, SM_SocketType socketType) : socket(socket), socketType(socketType) {}
+	SocketWrapper(void* arg_socket, SM_SocketType arg_socketType) : socket(arg_socket), socketType(arg_socketType) {}
 	~SocketWrapper();
 
 	void* socket;
@@ -46,6 +45,3 @@ private:
 };
 
 extern SocketHandler socketHandler;
-
-#endif
-

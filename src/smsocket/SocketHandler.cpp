@@ -11,14 +11,22 @@ using namespace boost::asio::ip;
 SocketWrapper::~SocketWrapper() {
 	switch (socketType) {
 		case SM_SocketType_Tcp:
-			delete (Socket<tcp>*) socket;
+			#pragma clang diagnostic push
+			#pragma clang diagnostic ignored "-Wundefined-func-template"
+			// todo: figure this out
+			delete reinterpret_cast<Socket<tcp>*>(socket);
+			#pragma clang diagnostic pop
 			break;
 		case SM_SocketType_Udp:
-			delete (Socket<udp>*) socket;
+			#pragma clang diagnostic push
+			#pragma clang diagnostic ignored "-Wundefined-func-template"
+			// todo: figure this out
+			delete reinterpret_cast<Socket<udp>*>(socket);
+			#pragma clang diagnostic pop
 			break;
 #if 0
 		case SM_SocketType_Icmp:
-			delete (Socket<icmp>*) socket;
+			delete reinterpret_cast<Socket<icmp>*>(socket);
 			break;
 #endif
 	}
@@ -58,10 +66,13 @@ template <class SocketType>
 Socket<SocketType>* SocketHandler::CreateSocket(SM_SocketType st) {
 	boost::mutex::scoped_lock l(socketListMutex);
 
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wundefined-func-template"
 	SocketWrapper* sp = new SocketWrapper(new Socket<SocketType>(st), st);
+	#pragma clang diagnostic pop
 	socketList.push_back(sp);
 
-	return (Socket<SocketType>*) sp->socket;
+	return reinterpret_cast<Socket<SocketType>*>(sp->socket);
 }
 
 void SocketHandler::DestroySocket(SocketWrapper* sw) {
@@ -112,8 +123,13 @@ SocketWrapper* SocketHandler::GetSocketWrapper(const void* socket) {
 		if ((*it)->socket == socket) return *it;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
+#pragma clang diagnostic ignored "-Wglobal-constructors"
+// todo: clean this up
 SocketHandler socketHandler;
+#pragma clang diagnostic pop
 

@@ -1,5 +1,4 @@
-#ifndef INC_SEXT_DEFINE_H
-#define INC_SEXT_DEFINE_H
+#pragma once
 
 enum SM_ErrorType {
 	SM_ErrorType_EMPTY_HOST = 1,
@@ -40,7 +39,7 @@ enum SM_SocketOption {
 };
 
 struct SocketOption {
-	SocketOption(SM_SocketOption so, int value) : option(so), value(value) {}
+	SocketOption(SM_SocketOption so, int arg_value) : option(so), value(arg_value) {}
 	SM_SocketOption option;
 	int value;
 };
@@ -53,6 +52,3 @@ enum CallbackEvent {
 	CallbackEvent_SendQueueEmpty,
 	CallbackEvent_Error,
 };
-
-#endif
-

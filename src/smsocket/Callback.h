@@ -1,5 +1,4 @@
-#ifndef INC_SEXT_CALLBACK_H
-#define INC_SEXT_CALLBACK_H
+#pragma once
 
 #include <string>
 #include <boost/asio.hpp>
@@ -45,9 +44,6 @@ private:
 	const CallbackEvent callbackEvent;
 	SocketWrapper* socketWrapper;
 	const void* additionalData[2];
-	
+
 //	volatile bool isExecuting;
 };
-
-#endif
-

@@ -1,5 +1,4 @@
-#ifndef INC_SEXT_SOCKET_H
-#define INC_SEXT_SOCKET_H
+#pragma once
 
 #include <stdint.h>
 #include <string>
@@ -16,7 +15,7 @@ class SocketHandler;
 template <class SocketType>
 class Socket {
 public:
-	Socket(SM_SocketType st, typename SocketType::socket* asioSocket = NULL);
+	Socket(SM_SocketType st, typename SocketType::socket* asioSocket = nullptr);
 	~Socket();
 
 	bool IsOpen();
@@ -71,5 +70,3 @@ private:
 
 	boost::shared_mutex handlerMutex;
 };
-
-#endif

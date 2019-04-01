@@ -8,7 +8,7 @@
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
  * Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
@@ -29,8 +29,7 @@
  * Version: $Id$
  */
 
-#ifndef _INCLUDE_SOURCEMOD_EXTENSION_BASESDK_H_
-#define _INCLUDE_SOURCEMOD_EXTENSION_BASESDK_H_
+#pragma once
 
 /**
  * @file smsdk_ext.h
@@ -86,10 +85,14 @@
 #include <metamod_wrappers.h>
 #endif
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wheader-hygiene"
+// todo: clean this up
 using namespace SourceMod;
 using namespace SourcePawn;
+#pragma clang diagnostic pop
 
-class SDKExtension : 
+class SDKExtension :
 #if defined SMEXT_CONF_METAMOD
 	public ISmmPlugin,
 #endif
@@ -98,6 +101,7 @@ class SDKExtension :
 public:
 	/** Constructor */
 	SDKExtension();
+	virtual ~SDKExtension() = default;
 public:
 	/**
 	 * @brief This is called after the initial loading sequence has been processed.
@@ -108,7 +112,7 @@ public:
 	 * @return			True to succeed loading, false to fail.
 	 */
 	virtual bool SDK_OnLoad(char *error, size_t maxlength, bool late);
-	
+
 	/**
 	 * @brief This is called right before the extension is unloaded.
 	 */
@@ -167,7 +171,7 @@ public: //IExtensionInterface
 
 	/**
 	 * @brief Called when the pause state changes.
-	 * 
+	 *
 	 * @param state			True if being paused, false if being unpaused.
 	 */
 	virtual void OnExtensionPauseChange(bool state);
@@ -277,11 +281,16 @@ extern IServerGameDLL *gamedll;
 #define SM_MKIFACE(name) SMINTERFACE_##name##_NAME, SMINTERFACE_##name##_VERSION
 /** Automates retrieving SourceMod interfaces */
 #define SM_GET_IFACE(prefix, addr) \
-	if (!g_pShareSys->RequestInterface(SM_MKIFACE(prefix), myself, (SMInterface **)&addr)) \
+	if (!g_pShareSys->RequestInterface(SM_MKIFACE(prefix), myself, reinterpret_cast<SMInterface **>(&addr))) \
 	{ \
 		if (error != NULL && maxlength) \
 		{ \
-			size_t len = snprintf(error, maxlength, "Could not find interface: %s", SMINTERFACE_##prefix##_NAME); \
+			size_t len = static_cast<size_t>(snprintf( \
+				error, \
+				maxlength, \
+				"Could not find interface: %s", \
+				SMINTERFACE_##prefix##_NAME \
+			)); \
 			if (len >= maxlength) \
 			{ \
 				error[maxlength - 1] = '\0'; \
@@ -306,5 +315,3 @@ extern IServerGameDLL *gamedll;
 		} \
 		return false; \
 	}
-
-#endif // _INCLUDE_SOURCEMOD_EXTENSION_BASESDK_H_
