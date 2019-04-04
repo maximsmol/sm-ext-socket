@@ -86,7 +86,7 @@ main = shakeArgs (shakeOptions' (def :: DirCfg)) $ do
               objSourceCfg =
                 (def :: CPPObjSourceCfg)
                   & field @"fromCPPObjBuild" .~ [cppObjBuildCfg]
-                  & field @"fromWorld" .~ ["libboost_thread-mt.dylib"]
+                  & field @"fromWorld" .~ ["libboost_thread.dylib"]
               flagCfg =
                 defaultCPPLinkBuildFlagCfg
                   & field @"common" <>~ ["-m32", "-arch", "i386", "-dynamiclib", "-install_name", "@rpath"</>libFilename]
