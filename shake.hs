@@ -37,17 +37,18 @@ main = shakeArgs (shakeOptions' (def :: DirCfg)) $ do
     distPath = dircfg^.field @"dist"
     in
       let
-        libName = "smsocket"
-        libPrefix = "lib"
-        libPostfix = ""
+        libName = "socket"
+        libPrefix = ""
+        libPostfix = ".ext"
         libExt = "dylib"
         libFilename = libPrefix++libName++libPostfix<.>libExt
         libPath = distPath</>libFilename
+        incPath = distPath </> "socket.inc"
       in
         let
           targetCfg =
             (def :: CPPTargetCfg)
-              & field @"name" .~ libName
+              & field @"name" .~ "smsocket"
           cppObjBuildCfg =
             let
               sourceCfg =
@@ -100,7 +101,8 @@ main = shakeArgs (shakeOptions' (def :: DirCfg)) $ do
           genCPPObjBuildRules cppObjBuildCfg
           genCPPLinkBuildRules linkBuildCfg
           linkToDistRules (getCPPLinkPrimaryBuildOut linkBuildCfg) libPath
-          want [libPath]
+          linkToDistRules ((dircfgForCPPTarget targetCfg^.field @"src") </> "socket.inc") incPath
+          want [libPath, incPath]
   return ()
 
 {-
